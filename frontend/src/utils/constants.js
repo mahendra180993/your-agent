@@ -1,12 +1,14 @@
 // src/utils/constants.js
-// In browser production: use current origin so API always matches the deployed URL (fixes localhost on Render).
-// In dev: use backend on localhost:5000. Build-time fallback for SSR: env or relative /api.
+// API URL: use current page origin in browser so it always matches deployed URL (fixes Render/localhost).
+// Only use localhost:5000 when the app is clearly running locally (localhost / 127.0.0.1).
 function getApiBaseUrl() {
   if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
-  if (import.meta.env.DEV) return 'http://localhost:5000/api';
-  if (typeof window !== 'undefined' && window.location?.origin)
-    return `${window.location.origin}/api`;
-  return '/api';
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    const origin = window.location.origin;
+    const isLocalHost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+    return isLocalHost ? 'http://localhost:5000/api' : `${origin}/api`;
+  }
+  return import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
 }
 export const API_BASE_URL = getApiBaseUrl();
 
