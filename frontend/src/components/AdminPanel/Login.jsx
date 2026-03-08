@@ -22,7 +22,10 @@ export default function Login() {
         navigate('/admin');
       }
     } catch (err) {
-      setError(err.error || 'Invalid credentials');
+      const msg = err?.error || 'Invalid credentials';
+      setError(msg.includes('Network') || msg.includes('timed out')
+        ? `${msg} Make sure you’re on the correct URL and try again. If you just deployed, wait a minute.`
+        : msg);
     } finally {
       setLoading(false);
     }

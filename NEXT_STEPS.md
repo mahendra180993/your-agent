@@ -389,6 +389,21 @@ Add this to any website (before `</body>` tag):
 - Check connection string format
 - Review Render logs for specific errors
 
+### Admin login not working (Network error / Invalid credentials)
+
+You need to log in first to add clients. If login fails:
+
+1. **Redeploy the app**  
+   The frontend must use your Render URL for API calls, not `localhost`. Push the latest code and let Render redeploy. After that, the login request will go to `https://your-app.onrender.com/api/admin/login`.
+
+2. **Set these env vars on Render** (Dashboard → your service → Environment):
+   - **ADMIN_EMAIL** – same email you use to log in (e.g. `you@example.com`)
+   - **ADMIN_PASSWORD** – same password you use to log in (must match exactly)
+   - **JWT_SECRET** – any long random string (e.g. run `openssl rand -hex 32` and paste it)
+
+3. **First load after idle**  
+   On free tier, the first request can take 30–60 seconds. If you see a timeout, wait a minute and try again.
+
 ### Frontend Not Loading
 
 **Check:**

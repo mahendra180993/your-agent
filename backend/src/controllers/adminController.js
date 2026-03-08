@@ -42,10 +42,11 @@ export const login = async (req, res) => {
     }
     
     // Fallback to environment variables (for backward compatibility)
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const inputEmail = (email || '').trim().toLowerCase();
     
-    if (email === adminEmail && password === adminPassword) {
+    if (inputEmail === adminEmail && password === adminPassword) {
       const token = generateToken('admin');
       res.json({
         success: true,
