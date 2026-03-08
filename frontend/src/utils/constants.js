@@ -1,5 +1,8 @@
 // src/utils/constants.js
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// In production (or when served from same host), use relative /api so no env var needed on Render.
+// In dev, use backend on localhost.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 export const STORAGE_KEYS = {
   SESSION_ID: 'chatbot_session_id',
