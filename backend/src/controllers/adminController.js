@@ -1,4 +1,5 @@
 // src/controllers/adminController.js
+import mongoose from 'mongoose';
 import ChatMessage from '../models/ChatMessage.js';
 import Session from '../models/Session.js';
 import bcrypt from 'bcryptjs';
@@ -10,32 +11,34 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Try database users first
-    try {
-      const User = (await import('../models/User.js')).default;
-      const user = await User.findOne({ email: email.toLowerCase().trim() });
-      
-      if (user && user.isActive) {
-        const isMatch = await user.comparePassword(password);
-        if (isMatch) {
-          user.lastLogin = new Date();
-          await user.save();
-          const token = generateToken(user._id.toString());
-          return res.json({
-            success: true,
-            token,
-            user: {
-              id: user._id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-            },
-          });
+    // Try database users only if MongoDB is connected (avoids hanging on cold start / disconnected DB)
+    const dbReady = mongoose.connection.readyState === 1;
+    if (dbReady) {
+      try {
+        const User = (await import('../models/User.js')).default;
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (user && user.isActive) {
+          const isMatch = await user.comparePassword(password);
+          if (isMatch) {
+            user.lastLogin = new Date();
+            await user.save();
+            const token = generateToken(user._id.toString());
+            return res.json({
+              success: true,
+              token,
+              user: {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+              },
+            });
+          }
         }
+      } catch (dbError) {
+        // Database error, fall back to env
+        logger.debug('Database users not available, using env fallback');
       }
-    } catch (dbError) {
-      // Database not available or User model not set up, fall back to env
-      logger.debug('Database users not available, using env fallback');
     }
     
     // Fallback to environment variables (for backward compatibility)

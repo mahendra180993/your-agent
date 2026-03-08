@@ -2,8 +2,10 @@
 import axios from 'axios';
 import { API_BASE_URL } from './constants.js';
 
+// 60s timeout so Render cold start (~30s) can complete before we give up
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -30,7 +32,12 @@ api.interceptors.response.use(
     if (error.response) {
       return Promise.reject(error.response.data);
     }
-    return Promise.reject({ error: 'Network error' });
+    // No response: timeout, cold start, or unreachable server
+    const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+    const message = isTimeout
+      ? 'Request timed out. The server may be waking up—please try again in a moment.'
+      : 'Network error. Check your connection or try again in a moment.';
+    return Promise.reject({ error: message });
   }
 );
 

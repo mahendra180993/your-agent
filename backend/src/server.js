@@ -40,15 +40,38 @@ connectDB().catch(err => {
 });
 
 // Security middleware
-app.use(helmet());
 app.use(corsOptions);
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Trust proxy for rate limiting
+// Trust proxy (required for Render; enables correct req.secure / X-Forwarded-Proto)
 app.set('trust proxy', 1);
+
+// Force HTTPS in production so the site is never served over HTTP (avoids "not secure" warning)
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    const proto = req.get('x-forwarded-proto');
+    if (proto && proto !== 'https') {
+      return res.redirect(301, `https://${req.get('host')}${req.url}`);
+    }
+    next();
+  });
+}
+
+// Security headers: HSTS and safe defaults so browsers treat the site as secure
+const helmetOptions = process.env.NODE_ENV === 'production'
+  ? {
+      strictTransportSecurity: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true,
+      },
+      contentSecurityPolicy: false, // avoid breaking inline scripts/embeds; enable and tune if needed
+    }
+  : {};
+app.use(helmet(helmetOptions));
 
 // Apply rate limiting to all routes
 app.use('/api', apiLimiter);

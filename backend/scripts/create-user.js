@@ -1,12 +1,17 @@
 // scripts/create-user.js
-// Script to create admin users
-// Usage: node scripts/create-user.js <email> <password> <name> [role]
+// Script to create admin users (stored in MongoDB; login uses these when DB is connected).
+// Usage: npm run create-user -- <email> <password> <name> [role]
+//        Or from backend folder: node scripts/create-user.js <email> <password> <name> [role]
+// Example: npm run create-user -- second@example.com SecurePass123 "Second Admin" admin
 
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import User from '../src/models/User.js';
 
-dotenv.config({ path: './.env' });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const createUser = async () => {
   try {
