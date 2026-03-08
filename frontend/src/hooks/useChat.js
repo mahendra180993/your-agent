@@ -72,9 +72,13 @@ export function useChat(website, config) {
       }
     } catch (error) {
       console.error('Chat error:', error);
+      let text = error?.error || config?.offlineMessage || 'Sorry, the server is not available. Please try again in a moment.';
+      if (error?.error === 'Client not found or inactive') {
+        text = 'This site is not registered for the chatbot. Add it in Admin → Client Management (use this site’s hostname as the website).';
+      }
       const errorMessage = {
         id: Date.now() + 1,
-        text: error?.error || config?.offlineMessage || 'Sorry, the backend server is not available. Please make sure MongoDB is running and the backend server is started.',
+        text,
         sender: 'bot',
         timestamp: new Date(),
         isError: true,

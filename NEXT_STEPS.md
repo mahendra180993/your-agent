@@ -292,12 +292,14 @@ Once deployed:
 
 ### Step 7: Add Your First Client (2 minutes)
 
+**Important:** The chatbot only works when the current site’s hostname is registered as a client. If you test on your Render URL, you must add that hostname.
+
 1. Go to: `https://your-app.onrender.com/admin/login`
 2. Login with your admin credentials
 3. Go to **"Client Management"**
 4. Click **"Add Client"**
 5. Enter:
-   - **Website**: `localhost` (for testing) or your actual domain
+   - **Website**: **`your-agent-5ti9.onrender.com`** (use your Render hostname exactly; or `localhost` for local testing)
    - **Business Type**: `Technology`
    - **System Prompt**: `You are a helpful assistant for a tech company.`
    - **Tone**: `friendly`
@@ -399,16 +401,17 @@ Add this to any website (before `</body>` tag):
 - Check that `frontend/dist` folder exists after build
 - Review build logs
 
-### Chatbot Not Responding
+### Chatbot Shows "Network error" or Not Responding
 
 **Check:**
-- AI API key is valid
-- Client is registered in database
-- Backend logs for errors
+- **Client for this site:** The chat only works if the **website** (hostname) is added in Admin → Client Management. For your app at `https://your-agent-5ti9.onrender.com`, add a client with **Website** = `your-agent-5ti9.onrender.com` (no `https://`). If this is missing, you may see "Network error" or "Client not found."
+- **Cold start:** After idle, the first request can take 30–60 seconds. Wait and try again.
+- AI API key is valid (OpenRouter or HuggingFace)
+- Backend logs in Render for errors
 
 **Common fixes:**
-- Verify OpenRouter API key is correct
-- Check client domain matches
+- Add a client with Website = your Render hostname (e.g. `your-agent-5ti9.onrender.com`)
+- Verify OpenRouter API key is set on Render
 - Review backend logs in Render
 
 ---

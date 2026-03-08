@@ -1,4 +1,5 @@
 // src/controllers/chatController.js
+import mongoose from 'mongoose';
 import ChatMessage from '../models/ChatMessage.js';
 import Session from '../models/Session.js';
 import clientService from '../services/clientService.js';
@@ -42,6 +43,14 @@ export const sendMessage = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Message and website are required',
+      });
+    }
+
+    // Avoid hanging when MongoDB is not connected (e.g. cold start)
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        error: 'Service is starting up. Please try again in a moment.',
       });
     }
 
