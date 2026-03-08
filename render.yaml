@@ -1,0 +1,26 @@
+# Render Blueprint Configuration
+# This file allows you to deploy with one click on Render
+# Go to: https://dashboard.render.com/new/blueprint
+
+services:
+  - type: web
+    name: ai-chatbot-backend
+    env: node
+    region: oregon  # Change to your preferred region
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Add these in Render dashboard after deployment:
+      # - MONGODB_URI
+      # - AI_PROVIDER
+      # - OPENROUTER_API_KEY
+      # - JWT_SECRET
+      # - ADMIN_EMAIL
+      # - ADMIN_PASSWORD
+      # - ALLOWED_ORIGINS

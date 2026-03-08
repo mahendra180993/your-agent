@@ -1,0 +1,14 @@
+QUICK STEPS TO FIND DATABASE ACCESS:
+
+1. Click "All Projects" in left sidebar
+2. Click on your project/cluster name
+3. Look for "Security" in left sidebar (in project view)
+4. Click "Database Access" under Security
+5. Click "Add New Database User"
+
+ALTERNATIVE:
+- Look for "Database" or "Clusters" in sidebar
+- Click on your cluster
+- Find "Security" or "Database Access"
+
+KEY: You need to be in PROJECT view, not ORGANIZATION view!
