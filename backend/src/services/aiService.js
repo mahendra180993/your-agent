@@ -32,7 +32,8 @@ class AIService {
       case 'gemini':
         this.apiKey = process.env.GEMINI_API_KEY;
         this.model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-        this.baseURL = 'https://generativelanguage.googleapis.com/v1beta';
+        // Use stable v1 endpoint for generateContent
+        this.baseURL = 'https://generativelanguage.googleapis.com/v1';
         if (!this.apiKey || this.apiKey.length < 20) {
           logger.warn(
             `Gemini API key is missing or looks invalid. Length: ${this.apiKey?.length || 0}`,
