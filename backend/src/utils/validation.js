@@ -26,9 +26,7 @@ export const validateClient = [
     .optional()
     .isLength({ max: 100 }),
   body('systemPrompt')
-    .optional()
-    // No hard length limit here so you can paste long, detailed prompts.
-    // If you ever want a cap, add .isLength({ max: N }).
+    .optional(), // No hard length limit here so you can paste long, detailed prompts.
   body('tone')
     .optional()
     .isIn(['formal', 'friendly', 'sales', 'casual', 'professional']),
