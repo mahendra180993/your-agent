@@ -29,6 +29,18 @@ class AIService {
         this.model = process.env.OLLAMA_MODEL || 'llama2';
         this.baseURL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
         break;
+      case 'gemini':
+        this.apiKey = process.env.GEMINI_API_KEY;
+        this.model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+        this.baseURL = 'https://generativelanguage.googleapis.com/v1beta';
+        if (!this.apiKey || this.apiKey.length < 20) {
+          logger.warn(
+            `Gemini API key is missing or looks invalid. Length: ${this.apiKey?.length || 0}`,
+          );
+        } else {
+          logger.info(`Gemini API key loaded (length: ${this.apiKey.length})`);
+        }
+        break;
       default:
         this.provider = 'openrouter';
         this.setupProvider();
@@ -52,6 +64,8 @@ class AIService {
           return await this.callHuggingFace(userMessage, systemPrompt);
         case 'ollama':
           return await this.callOllama(userMessage, systemPrompt);
+        case 'gemini':
+          return await this.callGemini(userMessage, systemPrompt);
         default:
           throw new Error('Unsupported AI provider');
       }
@@ -183,6 +197,52 @@ class AIService {
       return response.data.response || 'I apologize, but I could not generate a response.';
     } catch (error) {
       logger.error(`Ollama API Error: ${error.message}`);
+      throw new Error('Failed to generate AI response');
+    }
+  }
+
+  async callGemini(userMessage, systemPrompt) {
+    try {
+      if (!this.apiKey) {
+        logger.error('Gemini API key is not configured. Check your .env / Render env.');
+        throw new Error('Gemini API key is not configured');
+      }
+
+      const url = `${this.baseURL}/models/${this.model}:generateContent?key=${this.apiKey}`;
+
+      const prompt = `${systemPrompt}\n\nUser: ${userMessage}\nAssistant:`;
+
+      const response = await axios.post(
+        url,
+        {
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
+        },
+        {
+          timeout: 30000,
+        },
+      );
+
+      const candidates = response.data?.candidates;
+      const parts = candidates?.[0]?.content?.parts;
+      const text = parts?.[0]?.text;
+
+      if (!text) {
+        logger.error('Gemini API: Invalid response structure');
+        throw new Error('Invalid Gemini API response');
+      }
+
+      return text.trim();
+    } catch (error) {
+      if (error.response) {
+        logger.error(`Gemini API Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      } else {
+        logger.error(`Gemini API Error: ${error.message}`);
+      }
       throw new Error('Failed to generate AI response');
     }
   }
