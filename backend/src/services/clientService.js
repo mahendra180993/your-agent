@@ -2,10 +2,20 @@
 import Client from '../models/Client.js';
 import logger from '../utils/logger.js';
 
+const normalizeWebsite = (website) => {
+  if (!website) return '';
+  let value = website.toString().toLowerCase().trim();
+  // Strip protocol if admin accidentally includes full URL
+  value = value.replace(/^https?:\/\//, '');
+  // Remove trailing slashes
+  value = value.replace(/\/+$/, '');
+  return value;
+};
+
 class ClientService {
   async getClientByWebsite(website) {
     try {
-      const normalizedWebsite = website.toLowerCase().trim();
+      const normalizedWebsite = normalizeWebsite(website);
       const client = await Client.findOne({ 
         website: normalizedWebsite, 
         isActive: true 
@@ -24,7 +34,7 @@ class ClientService {
 
   async createClient(clientData) {
     try {
-      const normalizedWebsite = clientData.website.toLowerCase().trim();
+      const normalizedWebsite = normalizeWebsite(clientData.website);
       const client = new Client({
         ...clientData,
         website: normalizedWebsite,
@@ -43,9 +53,18 @@ class ClientService {
 
   async updateClient(website, updateData) {
     try {
-      const normalizedWebsite = website.toLowerCase().trim();
+      const rawWebsite = (website || '').toString().toLowerCase().trim();
+      const normalizedWebsite = normalizeWebsite(rawWebsite);
+      if (updateData.website) {
+        updateData.website = normalizeWebsite(updateData.website);
+      }
       const client = await Client.findOneAndUpdate(
-        { website: normalizedWebsite },
+        {
+          $or: [
+            { website: normalizedWebsite },
+            { website: rawWebsite },
+          ],
+        },
         { $set: updateData },
         { new: true, runValidators: true }
       );
@@ -73,7 +92,7 @@ class ClientService {
 
   async deleteClient(website) {
     try {
-      const normalizedWebsite = website.toLowerCase().trim();
+      const normalizedWebsite = normalizeWebsite(website);
       const client = await Client.findOneAndDelete({ website: normalizedWebsite });
       
       if (!client) {

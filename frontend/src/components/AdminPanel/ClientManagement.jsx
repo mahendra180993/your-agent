@@ -2,6 +2,14 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api.js';
 
+const sanitizeWebsite = (value) => {
+  if (!value) return '';
+  let v = value.trim();
+  v = v.replace(/^https?:\/\//i, '');
+  v = v.replace(/\/+$/, '');
+  return v;
+};
+
 export default function ClientManagement() {
   const [clients, setClients] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +21,10 @@ export default function ClientManagement() {
     tone: 'friendly',
     welcomeMessage: '',
     isActive: true,
+    headerTitle: '',
+    logoUrl: '',
+    primaryColor: '#007bff',
+    position: 'bottom-right',
   });
 
   useEffect(() => {
@@ -31,10 +43,27 @@ export default function ClientManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        website: sanitizeWebsite(formData.website),
+        businessType: formData.businessType,
+        systemPrompt: formData.systemPrompt,
+        tone: formData.tone,
+        welcomeMessage: formData.welcomeMessage,
+        isActive: formData.isActive,
+        headerTitle: formData.headerTitle,
+        logoUrl: formData.logoUrl,
+        customStyles: {
+          primaryColor: formData.primaryColor || '#007bff',
+          position: formData.position || 'bottom-right',
+        },
+      };
+
       if (editingClient) {
-        await api.put(`/clients/${editingClient.website}`, formData);
+        // Use original website from the row to find the client,
+        // but allow updating the website value itself via payload.website
+        await api.put(`/clients/${encodeURIComponent(editingClient.website)}`, payload);
       } else {
-        await api.post('/clients/', formData);
+        await api.post('/clients/', payload);
       }
       setIsModalOpen(false);
       setEditingClient(null);
@@ -45,6 +74,10 @@ export default function ClientManagement() {
         tone: 'friendly',
         welcomeMessage: '',
         isActive: true,
+        headerTitle: '',
+        logoUrl: '',
+        primaryColor: '#007bff',
+        position: 'bottom-right',
       });
       fetchClients();
     } catch (error) {
@@ -61,6 +94,10 @@ export default function ClientManagement() {
       tone: client.tone,
       welcomeMessage: client.welcomeMessage,
       isActive: client.isActive,
+      headerTitle: client.headerTitle || '',
+      logoUrl: client.logoUrl || '',
+      primaryColor: (client.customStyles && client.customStyles.primaryColor) || '#007bff',
+      position: (client.customStyles && client.customStyles.position) || 'bottom-right',
     });
     setIsModalOpen(true);
   };
@@ -68,7 +105,7 @@ export default function ClientManagement() {
   const handleDelete = async (website) => {
     if (confirm('Are you sure you want to delete this client?')) {
       try {
-        await api.delete(`/clients/${website}`);
+        await api.delete(`/clients/${encodeURIComponent(website)}`);
         fetchClients();
       } catch (error) {
         alert(error.error || 'Error deleting client');
@@ -183,7 +220,30 @@ export default function ClientManagement() {
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
-                  disabled={!!editingClient}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Chat Header Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.headerTitle}
+                  onChange={(e) => setFormData({ ...formData, headerTitle: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="e.g. Montridge Support"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Chat Logo URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.logoUrl}
+                  onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="https://example.com/logo.png"
                 />
               </div>
               <div>
@@ -234,6 +294,33 @@ export default function ClientManagement() {
                   onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Chat Color (primary)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.primaryColor}
+                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="#007bff"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Position
+                  </label>
+                  <select
+                    value={formData.position}
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="bottom-right">Bottom right</option>
+                    <option value="bottom-left">Bottom left</option>
+                  </select>
+                </div>
               </div>
               <div className="flex items-center">
                 <input

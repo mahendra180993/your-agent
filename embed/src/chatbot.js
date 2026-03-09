@@ -19,7 +19,8 @@
 
   // Generate or get session ID
   const getSessionId = () => {
-    const key = 'chatbot_session_id';
+    const host = window.location.hostname || 'default';
+    const key = `chatbot_session_id_${host}`;
     let sessionId = localStorage.getItem(key);
     if (!sessionId) {
       sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -30,14 +31,16 @@
 
   // Load messages from localStorage
   const loadMessages = () => {
-    const key = 'chatbot_messages';
+    const host = window.location.hostname || 'default';
+    const key = `chatbot_messages_${host}`;
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : [];
   };
 
   // Save messages to localStorage
   const saveMessages = (messages) => {
-    const key = 'chatbot_messages';
+    const host = window.location.hostname || 'default';
+    const key = `chatbot_messages_${host}`;
     localStorage.setItem(key, JSON.stringify(messages));
   };
 
@@ -49,6 +52,7 @@
     let isOpen = false;
     let isLoading = false;
     let isTyping = false;
+    let contactFormSubmitted = false;
 
     // Create container
     const container = document.createElement('div');
@@ -63,12 +67,13 @@
         ${CONFIG.position === 'bottom-right' ? 'bottom: 24px; right: 24px;' : 'bottom: 24px; left: 24px;'}
         z-index: ${CONFIG.zIndex};
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        --chat-primary: ${CONFIG.primaryColor};
       }
       .chatbot-button {
         width: 56px;
         height: 56px;
         border-radius: 50%;
-        background-color: ${CONFIG.primaryColor};
+        background-color: var(--chat-primary);
         border: none;
         cursor: pointer;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -85,6 +90,12 @@
         width: 24px;
         height: 24px;
         fill: white;
+      }
+      .chatbot-button-logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
       }
       .chatbot-widget {
         position: fixed;
@@ -113,7 +124,7 @@
         }
       }
       .chatbot-header {
-        background-color: ${CONFIG.primaryColor};
+        background-color: var(--chat-primary);
         color: white;
         padding: 16px;
         display: flex;
@@ -196,7 +207,7 @@
         word-wrap: break-word;
       }
       .chatbot-message.user .chatbot-message-content {
-        background-color: ${CONFIG.primaryColor};
+        background-color: var(--chat-primary);
         color: white;
         border-bottom-right-radius: 4px;
       }
@@ -229,13 +240,13 @@
         color: #6b7280;
       }
       .chatbot-input:focus {
-        border-color: ${CONFIG.primaryColor};
+        border-color: var(--chat-primary);
       }
       .chatbot-send {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background-color: ${CONFIG.primaryColor};
+        background-color: var(--chat-primary);
         border: none;
         color: white;
         cursor: pointer;
@@ -330,8 +341,9 @@
       newChatButton.addEventListener('click', () => {
         messages = [];
         // Clear stored conversation and session so a fresh chat starts
-        localStorage.removeItem('chatbot_messages');
-        localStorage.removeItem('chatbot_session_id');
+        const host = window.location.hostname || 'default';
+        localStorage.removeItem(`chatbot_messages_${host}`);
+        localStorage.removeItem(`chatbot_session_id_${host}`);
         sessionId = getSessionId();
         render();
       });
@@ -454,9 +466,19 @@
         messageDiv.className = `chatbot-message ${msg.sender}`;
         const content = document.createElement('div');
         content.className = 'chatbot-message-content';
-        content.textContent = msg.text;
+        const needsContactForm =
+          msg.sender === 'bot' && msg.text && msg.text.includes('[[CONTACT_FORM]]');
+        const cleanText = needsContactForm
+          ? msg.text.replace('[[CONTACT_FORM]]', '').trim()
+          : msg.text;
+        content.textContent = cleanText;
         messageDiv.appendChild(content);
         messagesContainer.appendChild(messageDiv);
+
+        // Render contact details form once, when requested by bot
+        if (needsContactForm && !contactFormSubmitted) {
+          renderContactForm(messagesContainer);
+        }
       });
 
       if (isTyping) {
@@ -474,25 +496,132 @@
       saveMessages(messages);
     };
 
+    const renderContactForm = (parent) => {
+      const formWrapper = document.createElement('div');
+      formWrapper.style.marginTop = '8px';
+
+      const form = document.createElement('form');
+      form.style.display = 'flex';
+      form.style.flexDirection = 'column';
+      form.style.gap = '8px';
+      form.style.padding = '12px 16px';
+      form.style.background = '#f3f4f6';
+      form.style.borderRadius = '12px';
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.placeholder = 'Your name';
+      nameInput.style.padding = '8px 10px';
+      nameInput.style.borderRadius = '8px';
+      nameInput.style.border = '1px solid #d1d5db';
+
+      const phoneInput = document.createElement('input');
+      phoneInput.type = 'tel';
+      phoneInput.placeholder = 'Phone number';
+      phoneInput.style.padding = '8px 10px';
+      phoneInput.style.borderRadius = '8px';
+      phoneInput.style.border = '1px solid #d1d5db';
+
+      const emailInput = document.createElement('input');
+      emailInput.type = 'email';
+      emailInput.placeholder = 'Email address';
+      emailInput.style.padding = '8px 10px';
+      emailInput.style.borderRadius = '8px';
+      emailInput.style.border = '1px solid #d1d5db';
+
+      const submitBtn = document.createElement('button');
+      submitBtn.type = 'submit';
+      submitBtn.textContent = 'Send details';
+      submitBtn.style.padding = '8px 12px';
+      submitBtn.style.borderRadius = '9999px';
+      submitBtn.style.border = 'none';
+      submitBtn.style.cursor = 'pointer';
+      submitBtn.style.alignSelf = 'flex-start';
+      submitBtn.style.backgroundColor = CONFIG.primaryColor;
+      submitBtn.style.color = '#fff';
+
+      form.appendChild(nameInput);
+      form.appendChild(phoneInput);
+      form.appendChild(emailInput);
+      form.appendChild(submitBtn);
+      formWrapper.appendChild(form);
+      parent.appendChild(formWrapper);
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const email = emailInput.value.trim();
+
+        if (!name || !phone || !email) {
+          alert('Please fill in name, phone, and email.');
+          return;
+        }
+
+        contactFormSubmitted = true;
+
+        messages.push({
+          id: Date.now(),
+          text: `Contact details provided - Name: ${name}, Phone: ${phone}, Email: ${email}`,
+          sender: 'user',
+          timestamp: new Date(),
+        });
+        render();
+      });
+    };
+
     // Initial render
     render();
 
-    // Fetch config and show welcome message
+    // Fetch per-client config (from admin) and apply welcome message + styles/title/logo if available
     fetch(`${CONFIG.apiBaseUrl}/chat/config/${website}`)
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.config.welcomeMessage) {
+        if (!data.success || !data.config) return;
+
+        const cfg = data.config;
+
+        // Apply styles from backend if provided (admin customizations)
+        if (cfg.customStyles && cfg.customStyles.primaryColor) {
+          CONFIG.primaryColor = cfg.customStyles.primaryColor;
+          // Update CSS variable so all parts (header, button, bubbles) use the new color,
+          // including existing history messages.
+          const hostContainer = document.getElementById('ai-chatbot-container');
+          if (hostContainer) {
+            hostContainer.style.setProperty('--chat-primary', CONFIG.primaryColor);
+          }
+          // Keep button/send inline color in sync as well
+          button.style.backgroundColor = CONFIG.primaryColor;
+          sendButton.style.backgroundColor = CONFIG.primaryColor;
+        }
+
+        // Apply header title / logo from backend if provided
+        if (cfg.headerTitle) {
+          const titleEl = header.querySelector('.chatbot-header-title');
+          if (titleEl) titleEl.textContent = cfg.headerTitle;
+        }
+        if (cfg.logoUrl) {
+          const logoEl = header.querySelector('.chatbot-logo');
+          if (logoEl && logoEl.tagName === 'IMG') {
+            logoEl.src = cfg.logoUrl;
+          }
+          // Also update the floating chat button to show the client logo
+          button.innerHTML = `<img src="${cfg.logoUrl}" alt="Open chat" class="chatbot-button-logo" />`;
+        }
+
+        // Show welcome message (auto-greet)
+        if (cfg.welcomeMessage) {
           setTimeout(() => {
             if (messages.length === 0) {
               messages.push({
                 id: Date.now(),
-                text: data.config.welcomeMessage,
+                text: cfg.welcomeMessage,
                 sender: 'bot',
                 timestamp: new Date(),
               });
               render();
             }
-          }, data.config.autoGreetDelay || 5000);
+          }, cfg.autoGreetDelay || 5000);
         }
       })
       .catch(() => {

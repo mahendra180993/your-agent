@@ -19,8 +19,9 @@ router.use(adminLimiter);
 
 router.post('/', validateClient, handleValidationErrors, createClient);
 router.get('/', getAllClients);
-router.get('/:website', getClient);
-router.put('/:website', validateClient, handleValidationErrors, updateClient);
-router.delete('/:website', deleteClient);
+// Allow websites with or without protocol and slashes by capturing the rest of the path
+router.get('/:website(*)', getClient);
+router.put('/:website(*)', validateClient, handleValidationErrors, updateClient);
+router.delete('/:website(*)', deleteClient);
 
 export default router;

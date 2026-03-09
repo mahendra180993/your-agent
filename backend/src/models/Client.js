@@ -32,6 +32,14 @@ const clientSchema = new mongoose.Schema(
       type: String,
       default: 'Hello! How can I help you today?',
     },
+    headerTitle: {
+      type: String,
+      default: 'Chat Support',
+    },
+    logoUrl: {
+      type: String,
+      default: '',
+    },
     autoGreetDelay: {
       type: Number,
       default: 5000, // 5 seconds in milliseconds

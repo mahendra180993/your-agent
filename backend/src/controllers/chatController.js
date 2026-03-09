@@ -206,6 +206,8 @@ export const getClientConfig = async (req, res) => {
       success: true,
       config: {
         welcomeMessage: client.welcomeMessage,
+        headerTitle: client.headerTitle,
+        logoUrl: client.logoUrl,
         autoGreetDelay: client.autoGreetDelay,
         offlineMessage: client.offlineMessage,
         customStyles: client.customStyles,
