@@ -81,7 +81,12 @@ export default function ClientManagement() {
       });
       fetchClients();
     } catch (error) {
-      alert(error.error || 'Error saving client');
+      // Show validation errors from backend if present
+      if (Array.isArray(error.errors) && error.errors.length > 0) {
+        alert(error.errors.map((e) => e.msg || e.param).join('\n'));
+      } else {
+        alert(error.error || 'Error saving client');
+      }
     }
   };
 
