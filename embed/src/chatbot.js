@@ -8,6 +8,8 @@
     position: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.position) || 'bottom-right',
     primaryColor: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.primaryColor) || '#007bff',
     zIndex: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.zIndex) || 9999,
+    title: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.title) || 'Chat Support',
+    logoUrl: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.logoUrl) || '',
   };
 
   // Get website from current domain
@@ -42,7 +44,7 @@
   // Create chatbot widget
   const createChatbot = () => {
     const website = getWebsite();
-    const sessionId = getSessionId();
+    let sessionId = getSessionId();
     let messages = loadMessages();
     let isOpen = false;
     let isLoading = false;
@@ -117,11 +119,48 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
       }
-      .chatbot-header h3 {
+      .chatbot-header-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .chatbot-logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: rgba(255,255,255,0.1);
+      }
+      .chatbot-header-text {
+        display: flex;
+        flex-direction: column;
+      }
+      .chatbot-header-title {
         margin: 0;
         font-size: 16px;
         font-weight: 600;
+      }
+      .chatbot-header-subtitle {
+        font-size: 12px;
+        opacity: 0.9;
+      }
+      .chatbot-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .chatbot-new-chat {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+      }
+      .chatbot-new-chat:hover {
+        background: rgba(255,255,255,0.2);
       }
       .chatbot-close {
         background: none;
@@ -268,13 +307,35 @@
     const header = document.createElement('div');
     header.className = 'chatbot-header';
     header.innerHTML = `
-      <h3>Chat Support</h3>
-      <button class="chatbot-close" aria-label="Close">×</button>
+      <div class="chatbot-header-main">
+        ${CONFIG.logoUrl
+          ? `<img src="${CONFIG.logoUrl}" alt="Chatbot logo" class="chatbot-logo" />`
+          : `<div class="chatbot-logo" aria-hidden="true"></div>`}
+        <div class="chatbot-header-text">
+          <div class="chatbot-header-title">${CONFIG.title}</div>
+          <div class="chatbot-header-subtitle">Online</div>
+        </div>
+      </div>
+      <div class="chatbot-header-actions">
+        <button class="chatbot-new-chat" aria-label="New conversation" title="New conversation">⟳</button>
+        <button class="chatbot-close" aria-label="Close">×</button>
+      </div>
     `;
     header.querySelector('.chatbot-close').addEventListener('click', () => {
       isOpen = false;
       render();
     });
+    const newChatButton = header.querySelector('.chatbot-new-chat');
+    if (newChatButton) {
+      newChatButton.addEventListener('click', () => {
+        messages = [];
+        // Clear stored conversation and session so a fresh chat starts
+        localStorage.removeItem('chatbot_messages');
+        localStorage.removeItem('chatbot_session_id');
+        sessionId = getSessionId();
+        render();
+      });
+    }
 
     const messagesContainer = document.createElement('div');
     messagesContainer.className = 'chatbot-messages';
