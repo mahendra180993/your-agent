@@ -207,6 +207,13 @@ git push -u origin main
 
 Click **"Advanced"** → **"Add Environment Variable"** and add these one by one:
 
+**⚠️ Required to fix "Network error" on login/chat:** Set your app’s full URL (so the frontend knows where the API is):
+
+```
+VITE_API_BASE_URL=https://your-agent-5ti9.onrender.com/api
+```
+*(Use YOUR actual Render URL: replace `your-agent-5ti9` with your service name. No trailing slash. This is used at build time.)*
+
 ```
 MONGODB_URI=mongodb+srv://chatbot-admin:YourPassword@cluster0.xxxxx.mongodb.net/ai-chatbot?retryWrites=true&w=majority
 ```
@@ -353,13 +360,19 @@ Your chatbot is now deployed and ready to use!
 - **API**: `https://your-app.onrender.com/api`
 - **Chatbot Script**: `https://your-app.onrender.com/chatbot.js`
 
-### Add to Your Website
+### Add to Your Website (or a client’s website)
 
-Add this to any website (before `</body>` tag):
+1. **Register the site in Admin:** In Client Management, add a client with **Website** = the site’s hostname (e.g. `www.clientcompany.com`).
+2. **Add this to the client’s page** (before `</body>`):
 
 ```html
+<script>
+  window.CHATBOT_CONFIG = { apiBaseUrl: 'https://your-app.onrender.com/api' };
+</script>
 <script src="https://your-app.onrender.com/chatbot.js"></script>
 ```
+
+Replace `your-app.onrender.com` with your actual Render URL. Full steps (WordPress, etc.) are in **ADD_CHATBOT_TO_CLIENT_WEBSITE.md**.
 
 ---
 
@@ -391,17 +404,24 @@ Add this to any website (before `</body>` tag):
 
 ### Admin login not working (Network error / Invalid credentials)
 
-You need to log in first to add clients. If login fails:
+You need to log in first to add clients. If login fails with **"Network error"**:
 
-1. **Redeploy the app**  
-   The frontend must use your Render URL for API calls, not `localhost`. Push the latest code and let Render redeploy. After that, the login request will go to `https://your-app.onrender.com/api/admin/login`.
+1. **Set API URL on Render (most important)**  
+   In **Render Dashboard** → your service → **Environment** → **Add Environment Variable**:
+   - **Key:** `VITE_API_BASE_URL`
+   - **Value:** `https://YOUR-SERVICE-NAME.onrender.com/api`  
+     (Use your real URL, e.g. `https://your-agent-5ti9.onrender.com/api` — no trailing slash.)
+   - Then click **Save Changes**. Render will redeploy. This makes the frontend call your server instead of localhost.
 
-2. **Set these env vars on Render** (Dashboard → your service → Environment):
-   - **ADMIN_EMAIL** – same email you use to log in (e.g. `you@example.com`)
-   - **ADMIN_PASSWORD** – same password you use to log in (must match exactly)
-   - **JWT_SECRET** – any long random string (e.g. run `openssl rand -hex 32` and paste it)
+2. **Redeploy so the new env is used**  
+   After adding `VITE_API_BASE_URL`, wait for the new deploy to finish (or trigger **Manual Deploy**). The frontend is built with this value, so a new build is required.
 
-3. **First load after idle**  
+3. **Other required env vars** (Dashboard → Environment):
+   - **ADMIN_EMAIL** – email you use to log in
+   - **ADMIN_PASSWORD** – password you use to log in (exact match)
+   - **JWT_SECRET** – long random string (e.g. `openssl rand -hex 32`)
+
+4. **First load after idle**  
    On free tier, the first request can take 30–60 seconds. If you see a timeout, wait a minute and try again.
 
 ### Frontend Not Loading

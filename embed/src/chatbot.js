@@ -183,6 +183,11 @@
         border-radius: 24px;
         font-size: 14px;
         outline: none;
+        color: #1f2937;
+        background-color: #fff;
+      }
+      .chatbot-input::placeholder {
+        color: #6b7280;
       }
       .chatbot-input:focus {
         border-color: ${CONFIG.primaryColor};
