@@ -10,6 +10,7 @@
     zIndex: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.zIndex) || 9999,
     title: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.title) || 'Chat Support',
     logoUrl: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.logoUrl) || '',
+    launcherText: (window.CHATBOT_CONFIG && window.CHATBOT_CONFIG.launcherText) || '',
   };
 
   // Get website from current domain
@@ -68,6 +69,24 @@
         z-index: ${CONFIG.zIndex};
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         --chat-primary: ${CONFIG.primaryColor};
+      }
+      .chatbot-launcher {
+        display: flex;
+        flex-direction: column;
+        align-items: ${CONFIG.position === 'bottom-right' ? 'flex-end' : 'flex-start'};
+        gap: 6px;
+      }
+      .chatbot-launcher-label {
+        max-width: 200px;
+        padding: 6px 10px;
+        border-radius: 9999px;
+        background: rgba(0,0,0,0.8);
+        color: #f9fafb;
+        font-size: 12px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .chatbot-button {
         width: 56px;
@@ -310,6 +329,19 @@
       render();
     });
 
+    // Launcher wrapper with optional label
+    const launcher = document.createElement('div');
+    launcher.className = 'chatbot-launcher';
+    const launcherLabel = document.createElement('div');
+    launcherLabel.className = 'chatbot-launcher-label';
+    if (CONFIG.launcherText) {
+      launcherLabel.textContent = CONFIG.launcherText;
+    } else {
+      launcherLabel.style.display = 'none';
+    }
+    launcher.appendChild(launcherLabel);
+    launcher.appendChild(button);
+
     // Create widget
     const widget = document.createElement('div');
     widget.className = 'chatbot-widget';
@@ -451,13 +483,13 @@
 
     const render = () => {
       if (isOpen) {
-        button.style.display = 'none';
+        launcher.style.display = 'none';
         widget.style.display = 'flex';
         container.appendChild(widget);
       } else {
-        button.style.display = 'flex';
+        launcher.style.display = 'flex';
         widget.style.display = 'none';
-        container.appendChild(button);
+        container.appendChild(launcher);
       }
 
       messagesContainer.innerHTML = '';
@@ -607,6 +639,13 @@
           }
           // Also update the floating chat button to show the client logo
           button.innerHTML = `<img src="${cfg.logoUrl}" alt="Open chat" class="chatbot-button-logo" />`;
+        }
+        if (cfg.launcherText) {
+          const labelEl = launcher.querySelector('.chatbot-launcher-label');
+          if (labelEl) {
+            labelEl.textContent = cfg.launcherText;
+            labelEl.style.display = 'block';
+          }
         }
 
         // Show welcome message (auto-greet)

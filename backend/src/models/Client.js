@@ -32,6 +32,10 @@ const clientSchema = new mongoose.Schema(
       type: String,
       default: 'Hello! How can I help you today?',
     },
+    launcherText: {
+      type: String,
+      default: '',
+    },
     headerTitle: {
       type: String,
       default: 'Chat Support',

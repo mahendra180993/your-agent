@@ -25,6 +25,7 @@ export default function ClientManagement() {
     logoUrl: '',
     primaryColor: '#007bff',
     position: 'bottom-right',
+    launcherText: '',
   });
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function ClientManagement() {
         isActive: formData.isActive,
         headerTitle: formData.headerTitle,
         logoUrl: formData.logoUrl,
+        launcherText: formData.launcherText,
         customStyles: {
           primaryColor: formData.primaryColor || '#007bff',
           position: formData.position || 'bottom-right',
@@ -78,6 +80,7 @@ export default function ClientManagement() {
         logoUrl: '',
         primaryColor: '#007bff',
         position: 'bottom-right',
+        launcherText: '',
       });
       fetchClients();
     } catch (error) {
@@ -103,6 +106,7 @@ export default function ClientManagement() {
       logoUrl: client.logoUrl || '',
       primaryColor: (client.customStyles && client.customStyles.primaryColor) || '#007bff',
       position: (client.customStyles && client.customStyles.position) || 'bottom-right',
+      launcherText: client.launcherText || '',
     });
     setIsModalOpen(true);
   };
@@ -249,6 +253,18 @@ export default function ClientManagement() {
                   onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="https://example.com/logo.png"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Chat Button Text (bubble)
+                </label>
+                <input
+                  type="text"
+                  value={formData.launcherText}
+                  onChange={(e) => setFormData({ ...formData, launcherText: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="e.g. We are here to help"
                 />
               </div>
               <div>
