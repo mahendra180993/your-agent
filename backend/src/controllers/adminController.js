@@ -101,12 +101,33 @@ export const getDashboardStats = async (req, res) => {
 
 export const getAllChats = async (req, res) => {
   try {
-    const { website, sessionId, page = 1, limit = 50 } = req.query;
+    const { website, sessionId, page = 1, limit = 50, from, to } = req.query;
     const skip = (page - 1) * limit;
     
     const query = {};
     if (website) query.website = website.toLowerCase().trim();
     if (sessionId) query.sessionId = sessionId;
+    if (from || to) {
+      query.createdAt = {};
+      if (from) {
+        const fromDate = new Date(from);
+        if (!isNaN(fromDate)) {
+          query.createdAt.$gte = fromDate;
+        }
+      }
+      if (to) {
+        const toDate = new Date(to);
+        if (!isNaN(toDate)) {
+          // Include the entire end day
+          toDate.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = toDate;
+        }
+      }
+      // If parsing failed for both, remove createdAt filter
+      if (Object.keys(query.createdAt).length === 0) {
+        delete query.createdAt;
+      }
+    }
     
     const messages = await ChatMessage.find(query)
       .sort({ createdAt: -1 })
